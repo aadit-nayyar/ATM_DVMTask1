@@ -1,32 +1,7 @@
 import random
 import csv
+import logging
 
-'''Designing an ATM Interface
-Class ATM has attribute card_list which contains the list of all the
-cards registered with the service.
-The class ATM has a method insert card which is invoked when a card is inserted.
-It takes in the card_number and pin as arguments and gives the user an option to
-withdraw money, desposit money, check account balance or exit.
-
-The class User(a subclass of ATM) represents an user. It has the following attributes:
- - atm: the ATM service in which the user is registered
- - user_name: the name of the user
- - account_list: the list of accounts owned by the user
- - card_list: the list of cards owned by the user
-This class has two methods:
- - __str__/__repr__: displays the user_name
- - new_account: creates a new account and updates the account_list of the instance
-
-The class Account represents an account held by a user. It has the following attributes:
- - user: the user to which the account belongs(an instance of the class User)
- - accont_number: the account_number 
- - balance: the balance in the account
- - card_list: the list of cards under that account
- - atm: the atm the user of the account is registered with
-The card_list of the account is also added to the card_list of the user and the atm
-The class Account has the following methods:
- - __str__/__repr__: displays the account number
- - new_card: creates a new card by generating a random card number'''
 
 
 class ATM:
@@ -40,8 +15,6 @@ class ATM:
             data = open(self.data,'r')
             atm_reader = csv.reader(data)
             atm_writer = csv.writer(data)
-
-        
 
             data.seek(0)
             for row in atm_reader:
@@ -71,6 +44,8 @@ class ATM:
         atm_writer = csv.writer(data)
         atm_writer.writerow([user,account,card,pin,balance])
         data.close()
+
+        logging.info('New user created. U: {}, A: {}, C: {}, B: {}'.format(user,account,card,balance))
 
         return user
 
@@ -115,7 +90,7 @@ Card Number: ''',this_user.card,'''
 Pin: ''',this_user.card.pin,'''
 Balance: ''',this_user.account.balance,'''
 Redirecting to Home Page...
-)****************************************************************************''')
+****************************************************************************''')
 
         '''for card in self.card_list:
             if card.card_number == card_number:
@@ -128,7 +103,7 @@ Redirecting to Home Page...
         print('Welcome ', user_name, '''!
 
 ****************************************************************************
-
+       
 To proceed, enter pin:''',end = '',sep='')
 
         number_of_attempts = 4
@@ -139,10 +114,12 @@ To proceed, enter pin:''',end = '',sep='')
             number_of_attempts -=1
             if number_of_attempts<1:
                 print("Authentication error! Please try again later.")
+                logging.info('Unsuccesful login to account of user: {}, A: {}, C: {}'.format(this_user,this_user.account,this_user.card))
                 return None
         print('''Card authenticated succesfully! 
 ****************************************************************************''')
- 
+        logging.info('Successful login. U: {}, A: {}, C: {}'.format(this_user,this_user.account,this_user.card))
+
         while True:
             print('''MENU:
 1: Withdraw Money
@@ -153,7 +130,8 @@ To proceed, enter pin:''',end = '',sep='')
 
             if cont == 1:
 
-                print('''Current account balance: Rs.''',this_user.account.balance)
+                prev=this_user.account.balance
+                print('''Current account balance: Rs.''',prev)
                 amount = int(input("Enter the amount you wish to withdraw: "))
 
                 if amount>int(this_user.account.balance):
@@ -165,6 +143,8 @@ Returnng to Home Screen...
                 else:
                     self.update_balance(this_user,(-1)*amount)
 
+                    logging.info('C: {} Prev Balance: {}, Amount withdrawn: {} Updated Balance: {}'.format(this_user.card,prev,amount,this_user.account.balance))
+
                     print('''Transaction completed!
 Final account balance: Rs.''',this_user.account.balance,'''
 Retruning to Home Screen...
@@ -173,12 +153,15 @@ Retruning to Home Screen...
 
             elif cont == 2:
 
-                print('''Current account balance: Rs.''',this_user.account.balance)
+                prev=this_user.account.balance
+                print('''Current account balance: Rs.''',prev)
                 amount=int(input("Enter the amount you wish to deposit: "))
                 print('Insert cash')
 
                 self.update_balance(this_user,amount)
                 
+                logging.info('C: {} Prev Balance: {}, Amount deposited: {} Updated Balance: {}'.format(this_user.card,prev,amount,this_user.account.balance))
+
                 print('''Transaction completed!
 Final account balance: Rs.''', this_user.account.balance,'''
 Returning to Home Screen...
@@ -190,6 +173,8 @@ Returning to Home Screen...
 Returning to Home Screen...
 ****************************************************************************''')
 
+                logging.info('C: {}, Balance checked'.format(this_user.card))
+
             elif cont == 0:
                 print('''Thank you for visiting!
 ****************************************************************************''')
@@ -197,7 +182,7 @@ Returning to Home Screen...
 
         
 
-class User(ATM):
+class User():
 
     def __init__(self,atm,user_name,account):
 
@@ -215,7 +200,7 @@ class User(ATM):
     
 
 
-class Account(User):
+class Account():
 
     def __init__(self,account_number,card,balance):
 
@@ -245,7 +230,7 @@ Card Number:''', card.card_number)
 
         return card
 
-class Card(Account):
+class Card():
 
     def __init__(self,card_number,pin):
 
@@ -278,7 +263,7 @@ class Card(Account):
 
     
 
-
+logging.basicConfig(filename = 'ATMlog.log', level = logging.DEBUG)
 
 atm = ATM('atm.csv')
 
